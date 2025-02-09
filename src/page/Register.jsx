@@ -1,5 +1,6 @@
 import axios from "axios";
 import React, { useState } from "react";
+import API from "../utils/api";
 
 const Register = () => {
   const [name, setName] = useState("");
@@ -10,9 +11,9 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        // "http://localhost:5000/api/auth/register",
-        "https://taskmanager-backend-5my8.onrender.com/api/auth/register",
+      const response = await API.post(
+        "/auth/register",
+        // "https://taskmanager-backend-5my8.onrender.com/api/auth/register",
         {
           name,
           email,

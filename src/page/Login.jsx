@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { Link } from "react-router-dom"; // Import Link
+import API from "../utils/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -10,8 +11,9 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(
-        "https://taskmanager-backend-5my8.onrender.com/api/auth/login",
+      const response = await API.post(
+        "/auth/login",
+        // "https://taskmanager-backend-5my8.onrender.com/api/auth/login",
         {
           email,
           password,
