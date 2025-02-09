@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import API from "../utils/api";
 
 const TaskForm = ({
@@ -11,6 +11,10 @@ const TaskForm = ({
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState("Pending");
   const [priority, setPriority] = useState("Low");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const titleRef = useRef(null); // Ref for autofocus
 
   useEffect(() => {
     if (editingTask) {
@@ -18,14 +22,27 @@ const TaskForm = ({
       setDescription(editingTask.description);
       setStatus(editingTask.status);
       setPriority(editingTask.priority);
+    } else {
+      resetForm();
     }
+
+    if (titleRef.current) titleRef.current.focus(); // Autofocus title field
   }, [editingTask]);
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setStatus("Pending");
+    setPriority("Low");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     try {
       if (editingTask) {
-        // If editing, update the task
         await API.put(`/tasks/${editingTask._id}`, {
           title,
           description,
@@ -33,46 +50,49 @@ const TaskForm = ({
           priority,
         });
       } else {
-        // If creating new task
-        await API.post("/tasks", {
-          title,
-          description,
-          status,
-          priority,
-        });
+        await API.post("/tasks", { title, description, status, priority });
+        resetForm(); // Reset only if adding a new task
       }
 
       fetchTasks();
-      closeEditForm(); // Close the form after editing or creating the task
-      setTitle("");
-      setDescription("");
-      setStatus("Pending");
-      setPriority("Low");
+      closeEditForm();
     } catch (error) {
-      console.error("Error submitting task:", error);
+      setError(
+        error.response?.data?.message || "Something went wrong. Try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-4 shadow-md rounded">
-      <h3 className="text-lg font-bold mb-2">
+    <form onSubmit={handleSubmit} className="bg-white p-6 shadow-lg rounded-lg">
+      <h3 className="text-xl font-bold mb-4">
         {editingTask ? "Edit Task" : "Add Task"}
       </h3>
+
+      {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
+
       <input
         type="text"
         placeholder="Title"
-        className="border p-2 w-full rounded mb-2"
+        className="border p-3 w-full rounded mb-2 focus:ring-2 focus:ring-blue-500"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
+        ref={titleRef}
+        required
       />
+
       <textarea
         placeholder="Description"
-        className="border p-2 w-full rounded mb-2"
+        className="border p-3 w-full rounded mb-2 focus:ring-2 focus:ring-blue-500"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        required
       />
+
       <select
-        className="border p-2 w-full rounded mb-2"
+        className="border p-3 w-full rounded mb-2 focus:ring-2 focus:ring-blue-500"
         value={status}
         onChange={(e) => setStatus(e.target.value)}
       >
@@ -80,8 +100,9 @@ const TaskForm = ({
         <option value="In Progress">In Progress</option>
         <option value="Completed">Completed</option>
       </select>
+
       <select
-        className="border p-2 w-full rounded mb-2"
+        className="border p-3 w-full rounded mb-4 focus:ring-2 focus:ring-blue-500"
         value={priority}
         onChange={(e) => setPriority(e.target.value)}
       >
@@ -89,12 +110,30 @@ const TaskForm = ({
         <option value="Medium">Medium</option>
         <option value="High">High</option>
       </select>
-      <button
-        type="submit"
-        className="bg-blue-600 text-white px-4 py-2 rounded w-full"
-      >
-        {editingTask ? "Update Task" : "Add Task"}
-      </button>
+
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className={`w-full text-white p-3 rounded-lg transition ${
+            loading
+              ? "bg-blue-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
+          disabled={loading}
+        >
+          {loading ? "Saving..." : editingTask ? "Update Task" : "Add Task"}
+        </button>
+
+        {editingTask && (
+          <button
+            type="button"
+            className="w-full bg-gray-500 text-white p-3 rounded-lg hover:bg-gray-600 transition"
+            onClick={closeEditForm}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
     </form>
   );
 };

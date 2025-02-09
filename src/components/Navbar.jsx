@@ -2,11 +2,13 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token"); // Check if user is authenticated
+  const token = localStorage.getItem("token");
 
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove token
-    navigate("/login"); // Redirect to login page
+    localStorage.removeItem("token"); // Clear token
+    localStorage.removeItem("user"); // Remove stored user data if applicable
+    navigate("/login");
+    window.location.reload(); // Ensure fresh state
   };
 
   return (
@@ -16,7 +18,11 @@ const Navbar = () => {
         <NavLink
           to="/"
           className={({ isActive }) =>
-            isActive ? "underline font-bold" : "hover:underline"
+            `px-3 py-2 rounded ${
+              isActive
+                ? "bg-white text-blue-600 font-bold"
+                : "hover:bg-white hover:text-blue-600"
+            }`
           }
         >
           Dashboard
@@ -24,19 +30,15 @@ const Navbar = () => {
         <NavLink
           to="/tasks"
           className={({ isActive }) =>
-            isActive ? "underline font-bold" : "hover:underline"
+            `px-3 py-2 rounded ${
+              isActive
+                ? "bg-white text-blue-600 font-bold"
+                : "hover:bg-white hover:text-blue-600"
+            }`
           }
         >
           Tasks
         </NavLink>
-        {/* <NavLink
-          to="/profile"
-          className={({ isActive }) =>
-            isActive ? "underline font-bold" : "hover:underline"
-          }
-        >
-          Profile
-        </NavLink> */}
       </div>
 
       {/* Right Side - Login/Logout Button */}
@@ -44,12 +46,15 @@ const Navbar = () => {
         {token ? (
           <button
             onClick={handleLogout}
-            className="bg-red-500 px-4 py-2 rounded"
+            className="bg-red-500 px-4 py-2 rounded hover:bg-red-700 transition"
           >
             Logout
           </button>
         ) : (
-          <NavLink to="/login" className="bg-green-500 px-4 py-2 rounded">
+          <NavLink
+            to="/login"
+            className="bg-green-500 px-4 py-2 rounded hover:bg-green-700 transition"
+          >
             Login
           </NavLink>
         )}

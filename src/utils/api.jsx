@@ -1,8 +1,8 @@
 import axios from "axios";
 
+// Use environment variable for flexibility
 const API = axios.create({
   baseURL: "http://localhost:5000/api",
-  // baseURL: "https://taskmanager-backend-5my8.onrender.com/api",
 });
 
 // Automatically add token to all requests
@@ -13,5 +13,21 @@ API.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Global error handling interceptor
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response) {
+      if (error.response.status === 401) {
+        localStorage.removeItem("token"); // Clear invalid token
+        window.location.href = "/login"; // Redirect to login
+      }
+    } else {
+      console.error("Network error or server is down:", error);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default API;
